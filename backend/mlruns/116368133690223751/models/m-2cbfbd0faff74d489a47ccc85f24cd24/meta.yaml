@@ -1,0 +1,10 @@
+artifact_location: file:///Users/olinmascarenhas/Desktop/cai/backend/mlruns/116368133690223751/models/m-2cbfbd0faff74d489a47ccc85f24cd24/artifacts
+creation_timestamp: 1773512433131
+experiment_id: '116368133690223751'
+last_updated_timestamp: 1773512435026
+model_id: m-2cbfbd0faff74d489a47ccc85f24cd24
+model_type: null
+name: retrained_model
+source_run_id: b3e57dc544e948eebe914040d0619636
+status: 2
+status_message: null

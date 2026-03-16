@@ -1,0 +1,16 @@
+creation_timestamp: 1773680703237
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1773680703237
+model_id: m-679ac4c0eed843ac88486700598b7c75
+name: cai-anomaly-detector
+run_id: d6a960db2ad8491281ef5842e6d469a7
+run_link: null
+source: models:/m-679ac4c0eed843ac88486700598b7c75
+status: READY
+status_message: null
+storage_location: file:///Users/olinmascarenhas/Desktop/cai/backend/mlruns/116368133690223751/models/m-679ac4c0eed843ac88486700598b7c75/artifacts
+user_id: null
+version: 12
+workspace: default

@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/olinmascarenhas/Desktop/cai/backend/mlruns/116368133690223751/ab8b8a8f01a346a5a2f29a7fc62aacb0/artifacts
+end_time: 1773680421950
+entry_point_name: ''
+experiment_id: '116368133690223751'
+lifecycle_stage: active
+run_id: ab8b8a8f01a346a5a2f29a7fc62aacb0
+run_name: retrain-20260316-1700
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1773680419917
+status: 3
+tags: []
+user_id: olinmascarenhas

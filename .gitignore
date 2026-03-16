@@ -1,0 +1,12 @@
+# Python / Backend
+backend/venv/
+venv/
+backend/__pycache__/
+*.pyc
+.env
+backend/generated_reports/
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+.DS_Store
