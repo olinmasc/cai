@@ -9,5 +9,7 @@ export default defineConfig({
   build: {
     // This ensures the output folder name matches what Vercel expects
     outDir: 'dist',
+    // Increases the chunk size limit to fix the Vercel warning
+    chunkSizeWarningLimit: 1000
   }
 })
