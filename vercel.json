@@ -2,7 +2,7 @@
     "version": 2,
     "builds": [
         {
-            "src": "backend/main.py",
+            "src": "api/index.py",
             "use": "@vercel/python"
         },
         {
@@ -13,18 +13,17 @@
             }
         }
     ],
-    "rewrites": [
+    "routes": [
         {
-            "source": "/api/(.*)",
-            "destination": "backend/main.py"
+            "src": "/api/(.*)",
+            "dest": "/api/index.py"
         },
         {
-            "source": "/assets/(.*)",
-            "destination": "frontend/dist/assets/$1"
+            "handle": "filesystem"
         },
         {
-            "source": "/(.*)",
-            "destination": "frontend/dist/index.html"
+            "src": "/(.*)",
+            "dest": "/index.html"
         }
     ]
 }

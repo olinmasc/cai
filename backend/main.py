@@ -6,6 +6,7 @@ import pandas as pd
 import io
 import math
 import re
+import os
 from datetime import datetime
 from bson import ObjectId
 from database import invoices_collection, clients_collection
@@ -13,9 +14,20 @@ import audit
 
 app = FastAPI(title="CAI — Autonomous GST Compliance", version="1.0.0")
 
+# ── CORS: supports localhost dev + any Vercel deployment ──
+_frontend_url = os.getenv("FRONTEND_URL", "")  # Set this in Vercel dashboard
+
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+if _frontend_url:
+    allowed_origins.append(_frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,13 +58,9 @@ async def upload_real_invoices(client_id: str, file: UploadFile = File(...)):
 
     # ── 1. SAFE AUTO-CLEANING LAYER ──
 
-    # Drop rows that are completely empty
     df.dropna(how='all', inplace=True)
-
-    # Standardize column names
     df.columns = [str(c).strip().title() for c in df.columns]
 
-    # Map common CA aliases to our standard format
     col_mapping = {
         'Invoice Number': 'Invoice No',
         'Inv No': 'Invoice No',
@@ -68,20 +76,12 @@ async def upload_real_invoices(client_id: str, file: UploadFile = File(...)):
         raise HTTPException(
             status_code=400, detail=f"Missing mandatory columns: {', '.join(missing_cols)}")
 
-    # ── THE FIX: SMART CURRENCY SCRUBBING ──
     df['Amount'] = df['Amount'].astype(str)
-    df['Amount'] = df['Amount'].str.replace(
-        ',', '', regex=False)               # Removes commas
-    # Removes Rs or Rs. (case insensitive)
+    df['Amount'] = df['Amount'].str.replace(',', '', regex=False)
     df['Amount'] = df['Amount'].str.replace(r'(?i)rs\.?', '', regex=True)
-    df['Amount'] = df['Amount'].str.replace(
-        '₹', '', regex=False)               # Removes Rupee symbol
-    df['Amount'] = df['Amount'].str.replace(
-        ' ', '', regex=False)               # Removes spaces
-
-    # Convert safely to numeric!
+    df['Amount'] = df['Amount'].str.replace('₹', '', regex=False)
+    df['Amount'] = df['Amount'].str.replace(' ', '', regex=False)
     df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
-
     df['Invoice No'] = df['Invoice No'].astype(str).str.strip()
 
     # ── 2. VALIDATION & DATABASE INSERTION ──
@@ -134,12 +134,11 @@ async def upload_real_invoices(client_id: str, file: UploadFile = File(...)):
 
 app.include_router(upload_router)
 
-app.include_router(auth.router,           prefix="/auth",
-                   tags=["Auth"])
+app.include_router(auth.router,           prefix="/auth",        tags=["Auth"])
 app.include_router(clients.router,        prefix="/clients",
                    tags=["Clients"])
 app.include_router(invoices.router,
-                   prefix="/invoices",       tags=["Invoices"])
+                   prefix="/invoices",    tags=["Invoices"])
 app.include_router(reconciliation.router,
                    prefix="/reconciliation", tags=["Reconciliation"])
 app.include_router(filings.router,        prefix="/filings",
