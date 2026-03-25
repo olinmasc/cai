@@ -1,4 +1,5 @@
-const BASE = "http://127.0.0.1:8000";
+// Use the relative /api path on Vercel, but use localhost when coding on your Mac
+const BASE = import.meta.env.PROD ? "/api" : "http://127.0.0.1:8000";
 
 function getToken() {
   return localStorage.getItem("cai_token") || "";
@@ -54,10 +55,10 @@ async function download(path) {
 }
 
 export const api = {
-  get:      (path)         => request("GET",    path),
-  post:     (path, body)   => request("POST",   path, body),
-  put:      (path, body)   => request("PUT",    path, body),
-  delete:   (path)         => request("DELETE", path),
-  upload:   (path, form)   => request("POST",   path, form),
+  get: (path) => request("GET", path),
+  post: (path, body) => request("POST", path, body),
+  put: (path, body) => request("PUT", path, body),
+  delete: (path) => request("DELETE", path),
+  upload: (path, form) => request("POST", path, form),
   download,
 };
