@@ -7,7 +7,10 @@
         },
         {
             "src": "frontend/package.json",
-            "use": "@vercel/static-build"
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "dist"
+            }
         }
     ],
     "rewrites": [
@@ -16,8 +19,12 @@
             "destination": "backend/main.py"
         },
         {
+            "source": "/assets/(.*)",
+            "destination": "frontend/dist/assets/$1"
+        },
+        {
             "source": "/(.*)",
-            "destination": "frontend/index.html"
+            "destination": "frontend/dist/index.html"
         }
     ]
 }
