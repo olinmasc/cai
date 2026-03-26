@@ -10,12 +10,12 @@ import os
 from datetime import datetime
 from bson import ObjectId
 from database import invoices_collection, clients_collection
-import backend.audit as audit
+import audit  # ← FIXED: was "import backend.audit as audit" which breaks on Render
 
 app = FastAPI(title="CAI — Autonomous GST Compliance", version="1.0.0")
 
 # ── CORS: supports localhost dev + any Vercel deployment ──
-_frontend_url = os.getenv("FRONTEND_URL", "")  # Set this in Vercel dashboard
+_frontend_url = os.getenv("FRONTEND_URL", "")
 
 allowed_origins = [
     "http://localhost:5173",
@@ -56,8 +56,6 @@ async def upload_real_invoices(client_id: str, file: UploadFile = File(...)):
         raise HTTPException(
             status_code=400, detail="Could not read file. It might be corrupted.")
 
-    # ── 1. SAFE AUTO-CLEANING LAYER ──
-
     df.dropna(how='all', inplace=True)
     df.columns = [str(c).strip().title() for c in df.columns]
 
@@ -84,8 +82,6 @@ async def upload_real_invoices(client_id: str, file: UploadFile = File(...)):
     df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
     df['Invoice No'] = df['Invoice No'].astype(str).str.strip()
 
-    # ── 2. VALIDATION & DATABASE INSERTION ──
-
     row_errors = []
     valid_invoices = []
 
@@ -100,7 +96,7 @@ async def upload_real_invoices(client_id: str, file: UploadFile = File(...)):
         amount = row.get('Amount', 0)
         if math.isnan(amount):
             row_errors.append(
-                f"Row {row_num}: Amount is not a valid number. We cannot guess this.")
+                f"Row {row_num}: Amount is not a valid number.")
             continue
 
         valid_invoices.append({
@@ -117,7 +113,7 @@ async def upload_real_invoices(client_id: str, file: UploadFile = File(...)):
         })
 
     if row_errors:
-        error_msg = "File Rejected. We auto-cleaned what we could, but please fix these critical errors:\n• " + \
+        error_msg = "File Rejected. Please fix these critical errors:\n• " + \
             "\n• ".join(row_errors[:5])
         if len(row_errors) > 5:
             error_msg += f"\n...and {len(row_errors) - 5} more."
@@ -133,12 +129,12 @@ async def upload_real_invoices(client_id: str, file: UploadFile = File(...)):
     }
 
 app.include_router(upload_router)
-
-app.include_router(auth.router,           prefix="/auth",        tags=["Auth"])
+app.include_router(auth.router,           prefix="/auth",
+                   tags=["Auth"])
 app.include_router(clients.router,        prefix="/clients",
                    tags=["Clients"])
 app.include_router(invoices.router,
-                   prefix="/invoices",    tags=["Invoices"])
+                   prefix="/invoices",       tags=["Invoices"])
 app.include_router(reconciliation.router,
                    prefix="/reconciliation", tags=["Reconciliation"])
 app.include_router(filings.router,        prefix="/filings",
