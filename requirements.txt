@@ -23,7 +23,7 @@ python-multipart==0.0.22
 rsa==4.9.1
 setuptools==80.10.2
 six==1.17.0
-starlette==0.52.1
+starlette==0.37.2
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 uvicorn==0.30.6
