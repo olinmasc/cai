@@ -47,7 +47,6 @@ async def approve_exception(exception_id: str, current_admin=Depends(require_adm
         raise HTTPException(
             status_code=404, detail="Exception record not found")
 
-    # Log action for compliance auditing
     await audit_logs_collection.insert_one({
         "action": "OVERRIDE_AI_EXCEPTION",
         "user": current_admin["email"],
@@ -68,8 +67,6 @@ async def notify_client(req: NotifyClientRequest, current_admin=Depends(require_
             status_code=400, detail="Client phone number is missing or invalid.")
 
     phone = client["phone"]
-
-    # Format amount cleanly
     formatted_amount = f"₹{req.amount:,.2f}" if req.amount else "Unknown Amount"
 
     message_body = (
@@ -84,7 +81,6 @@ async def notify_client(req: NotifyClientRequest, current_admin=Depends(require_
     auth_token = os.getenv("TWILIO_AUTH_TOKEN")
     twilio_number = os.getenv("TWILIO_WHATSAPP_NUMBER")
 
-    # Graceful fallback if Twilio is not configured
     if not account_sid or not auth_token:
         print(f"\n[MOCK TWILIO] WhatsApp to {phone}:\n{message_body}\n")
         return {"message": "Twilio not configured. Mock notification logged to console."}
@@ -118,7 +114,6 @@ async def export_report(client_id: str, format: str = "excel", current_admin=Dep
 
     if format == "excel":
         df = pd.DataFrame(records)
-        # Clean up columns for the client
         df = df[['party_name', 'invoice_id',
                  'amount', 'mismatch_reason', 'period']]
         df.columns = ['Supplier/Buyer', 'Invoice Number',
@@ -156,7 +151,6 @@ async def export_report(client_id: str, format: str = "excel", current_admin=Dep
                 50, y, f"Issue: {rec.get('mismatch_reason', 'Flagged for manual review')}")
             y -= 25
 
-            # Page break handling
             if y < 100:
                 p.showPage()
                 y = 800
@@ -177,8 +171,8 @@ async def export_report(client_id: str, format: str = "excel", current_admin=Dep
 
 @router.get("/audit/{filename}")
 async def download_audit(filename: str):
-
-    path = f"audit_reports/{filename}"
+    # ── FIX: Use /tmp on Vercel (read-only filesystem) ──
+    path = f"/tmp/audit_reports/{filename}"
 
     if not os.path.exists(path):
         raise HTTPException(404, "Audit file not found")

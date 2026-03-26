@@ -4,8 +4,7 @@ agents.py — CAI Multi-Agent Orchestration via LangGraph
 
 import os
 from datetime import datetime
-from typing import TypedDict, Optional, Annotated
-import operator
+from typing import TypedDict, Optional
 from dotenv import load_dotenv
 
 from reportlab.pdfgen import canvas
@@ -14,7 +13,6 @@ from reportlab.lib.pagesizes import letter
 from langgraph.graph import StateGraph, END
 from langchain_groq import ChatGroq
 
-# Import your ML model and tracker
 from ml_model import get_detector
 from mlops import get_tracker, retrain_and_log
 
@@ -68,7 +66,7 @@ async def ingestion_agent(state: PipelineState) -> PipelineState:
                 "gstin": inv.get("gstin", "").strip().upper(),
                 "gst_type": inv.get("gst_type", "PURCHASE").upper(),
             })
-        except:
+        except Exception:
             pass
 
     return {
@@ -87,7 +85,6 @@ async def reconciliation_agent(state: PipelineState) -> PipelineState:
     if not invoices:
         return {**state, "risk_score": 0.0, "matched_count": 0, "mismatch_count": 0, "anomalies": []}
 
-    # 1. Run XGBoost Anomaly Detection
     scored = detector.predict_anomaly(invoices)
 
     reconciled = []
@@ -98,10 +95,7 @@ async def reconciliation_agent(state: PipelineState) -> PipelineState:
     for inv in scored:
         anomaly_score = inv.get("anomaly_score", 0)
         is_anomaly = inv.get("is_anomaly", False)
-
         missing_data = not inv.get("gstin") or inv.get("amount") <= 0
-
-        # Flag if XGBoost caught it OR if data is missing
         gstr2a_match = not (is_anomaly or missing_data)
         mismatch_reason = None
 
@@ -112,7 +106,6 @@ async def reconciliation_agent(state: PipelineState) -> PipelineState:
             else:
                 raw_reason = f"XGBoost model flagged transactional pattern anomaly (Confidence: {anomaly_score}%)."
 
-            # 2. Ask Llama-3 to explain the anomaly for the CA
             if llm:
                 try:
                     response = llm.invoke(
@@ -142,7 +135,6 @@ async def reconciliation_agent(state: PipelineState) -> PipelineState:
         if is_anomaly or not gstr2a_match:
             anomalies.append(result)
 
-    # Calculate weighted Risk Score
     mismatch_rate = mismatched / len(reconciled)
     anomaly_rate = len(
         [a for a in anomalies if a.get("is_anomaly")]) / len(reconciled)
@@ -202,7 +194,6 @@ async def learning_agent(state: PipelineState) -> PipelineState:
 # CONDITIONAL ROUTER
 # =========================
 def should_file(state: PipelineState) -> str:
-    # Do not auto-file if risk is too high!
     if state["risk_score"] > 60.0 or len(state.get("ingested_invoices", [])) == 0:
         return "skip_filing"
     return "file"
@@ -269,7 +260,6 @@ async def run_pipeline(
 
     final_state = await pipeline.ainvoke(state)
 
-    # SAFE VALUES
     total = len(final_state.get("ingested_invoices", []))
     matched = final_state.get("matched_count", 0)
     mismatched = final_state.get("mismatch_count", 0)
@@ -278,12 +268,11 @@ async def run_pipeline(
     nic = final_state.get("nic_reference", "")
     completed = final_state.get("completed_at", "")
 
-    # =========================
-    # CREATE AUDIT PDF (Your Custom Code!)
-    # =========================
-    os.makedirs("audit_reports", exist_ok=True)
+    # ── FIX: Write to /tmp on Vercel (filesystem is read-only) ──
+    tmp_dir = "/tmp/audit_reports"
+    os.makedirs(tmp_dir, exist_ok=True)
     filename = f"GST_AUDIT_{client_id}_{period}.pdf"
-    path = f"audit_reports/{filename}"
+    path = os.path.join(tmp_dir, filename)
 
     c = canvas.Canvas(path, pagesize=letter)
     c.setFont("Helvetica-Bold", 16)
