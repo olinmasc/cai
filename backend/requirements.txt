@@ -27,3 +27,4 @@ dnspython
 anyio
 starlette
 reportlab
+twilio
