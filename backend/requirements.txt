@@ -25,3 +25,4 @@ langchain-groq
 xgboost
 scikit-learn
 joblib
+mlflow
