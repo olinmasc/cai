@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from database import invoices_collection, clients_collection
-from models import InvoiceCreate
-from dependencies import get_current_user
+from backend.database import invoices_collection, clients_collection
+from backend.models import InvoiceCreate
+from backend.dependencies import get_current_user
 from bson import ObjectId
 from datetime import datetime
 import xml.etree.ElementTree as ET

@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from docxtpl import DocxTemplate
 from bson import ObjectId
-from database import clients_collection
+from backend.database import clients_collection
 
 router = APIRouter()
 

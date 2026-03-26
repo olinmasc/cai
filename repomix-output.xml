@@ -1032,10 +1032,10 @@ from . import filings
 
 <file path="backend/routers/auth.py">
 from fastapi import APIRouter, HTTPException, status, Depends
-from database import users_collection
-from models import UserCreate, UserLogin, Token
-from auth import hash_password, verify_password, create_access_token
-from dependencies import get_current_user
+from backend.database import users_collection
+from backend.models import UserCreate, UserLogin, Token
+from backend.auth import hash_password, verify_password, create_access_token
+from backend.dependencies import get_current_user
 
 router = APIRouter()
 
@@ -1111,9 +1111,9 @@ async def get_me(current_user=Depends(get_current_user)):
 
 <file path="backend/routers/clients.py">
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from database import clients_collection, invoices_collection
-from models import ClientCreate, ClientUpdate, GSTValidationRequest
-from dependencies import get_current_user
+from backend.database import clients_collection, invoices_collection
+from backend.models import ClientCreate, ClientUpdate, GSTValidationRequest
+from backend.dependencies import get_current_user
 from bson import ObjectId
 from datetime import datetime
 import xmltodict
@@ -1240,9 +1240,9 @@ async def upload_tally_xml(client_id: str, file: UploadFile = File(...), current
 
 <file path="backend/routers/filings.py">
 from fastapi import APIRouter, Depends, HTTPException
-from database import filings_collection, clients_collection
-from models import FilingCreate
-from dependencies import get_current_user
+from backend.database import filings_collection, clients_collection
+from backend.models import FilingCreate
+from backend.dependencies import get_current_user
 from bson import ObjectId
 from datetime import datetime
 
@@ -1356,9 +1356,9 @@ async def mark_error(
 
 <file path="backend/routers/invoices.py">
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from database import invoices_collection, clients_collection
-from models import InvoiceCreate
-from dependencies import get_current_user
+from backend.database import invoices_collection, clients_collection
+from backend.models import InvoiceCreate
+from backend.dependencies import get_current_user
 from bson import ObjectId
 from datetime import datetime
 import xml.etree.ElementTree as ET
@@ -1473,9 +1473,9 @@ async def delete_invoice(
 <file path="backend/routers/reconciliation.py">
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from database import invoices_collection, reconciliations_collection, clients_collection, audit_logs_collection
-from models import NotifyClientRequest
-from dependencies import get_current_user, require_admin
+from backend.database import invoices_collection, reconciliations_collection, clients_collection, audit_logs_collection
+from backend.models import NotifyClientRequest
+from backend.dependencies import get_current_user, require_admin
 from bson import ObjectId
 from datetime import datetime
 import os
@@ -1485,7 +1485,7 @@ from reportlab.pdfgen import canvas
 from twilio.rest import Client
 
 # IMPORT YOUR REAL MACHINE LEARNING MODEL
-from ml_model import get_detector
+from backend.ml_model import get_detector
 
 router = APIRouter()
 
@@ -1698,8 +1698,8 @@ from dotenv import load_dotenv
 from langgraph.graph import StateGraph, END
 from langchain_groq import ChatGroq
 
-from ml_model import get_detector
-from mlops import get_tracker, retrain_and_log
+ffrom backend.ml_model import get_detector
+from backend.mlops import get_tracker, retrain_and_log
 
 load_dotenv()
 
@@ -2109,10 +2109,10 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-from dependencies import get_current_user
-from database import clients_collection, invoices_collection, reconciliations_collection, filings_collection
-from agents import run_pipeline
-from ml_model import get_detector
+from backend.dependencies import get_current_user
+from backend.database import clients_collection, invoices_collection, reconciliations_collection, filings_collection
+from backend.agents import run_pipeline
+from backend.ml_model import get_detector
 from bson import ObjectId
 
 ai_router = APIRouter(prefix="/ai", tags=["AI Pipeline"])
@@ -2373,12 +2373,12 @@ async def create_indexes():
     await users_collection.create_index("email", unique=True)
     await clients_collection.create_index("gstin")
 </file>
-
+from backend.auth import
 <file path="backend/dependencies.py">
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from database import users_collection
-from auth import decode_token
+from backend.database import users_collection
+ decode_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -2472,15 +2472,15 @@ if __name__ == "__main__":
 </file>
 
 <file path="backend/main.py">
-from routers import auth, clients, invoices, reconciliation, filings
+from backend.routers import auth, clients, invoices, reconciliation, filings
 from fastapi import FastAPI, UploadFile, File, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-from ai_routes import ai_router
+from backend.ai_routes import ai_router
 import pandas as pd
 import io
 from datetime import datetime
 from bson import ObjectId
-from database import invoices_collection, clients_collection
+from backend.database import invoices_collection, clients_collection
 
 app = FastAPI(title="CAI — Autonomous GST Compliance", version="1.0.0")
 

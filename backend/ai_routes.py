@@ -7,16 +7,16 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-from dependencies import get_current_user
-from database import (
+from backend.dependencies import get_current_user
+from backend.database import (
     clients_collection,
     invoices_collection,
     reconciliations_collection,
     filings_collection,
 )
 
-from agents import run_pipeline
-from ml_model import get_detector
+from backend.agents import run_pipeline
+from backend.ml_model import get_detector
 from bson import ObjectId
 
 

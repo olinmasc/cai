@@ -1,9 +1,9 @@
 import io
 from lxml import etree
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from database import clients_collection, invoices_collection, filings_collection, reconciliations_collection
-from models import ClientCreate, GSTValidationRequest
-from dependencies import get_current_user
+from backend.database import clients_collection, invoices_collection, filings_collection, reconciliations_collection
+from backend.models import ClientCreate, GSTValidationRequest
+from backend.dependencies import get_current_user
 from bson import ObjectId
 from datetime import datetime
 import re

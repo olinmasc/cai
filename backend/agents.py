@@ -13,8 +13,8 @@ from reportlab.lib.pagesizes import letter
 from langgraph.graph import StateGraph, END
 from langchain_groq import ChatGroq
 
-from ml_model import get_detector
-from mlops import get_tracker, retrain_and_log
+from backend.ml_model import get_detector
+from backend.mlops import get_tracker, retrain_and_log
 
 load_dotenv()
 
