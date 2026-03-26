@@ -10,7 +10,6 @@ import os
 import io
 import pandas as pd
 from reportlab.pdfgen import canvas
-from twilio.rest import Client
 
 router = APIRouter()
 
@@ -60,7 +59,7 @@ async def approve_exception(exception_id: str, current_admin=Depends(require_adm
 
 @router.post("/notify-client")
 async def notify_client(req: NotifyClientRequest, current_admin=Depends(require_admin)):
-    """Sends an automated WhatsApp alert to the client regarding a specific invoice anomaly."""
+    """Logs a mock WhatsApp alert to the client regarding a specific invoice anomaly."""
     client = await clients_collection.find_one({"_id": ObjectId(req.client_id)})
     if not client or not client.get("phone"):
         raise HTTPException(
@@ -77,25 +76,9 @@ async def notify_client(req: NotifyClientRequest, current_admin=Depends(require_
         f"Please upload the corrected invoice to our secure portal to avoid filing delays."
     )
 
-    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
-    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
-    twilio_number = os.getenv("TWILIO_WHATSAPP_NUMBER")
-
-    if not account_sid or not auth_token:
-        print(f"\n[MOCK TWILIO] WhatsApp to {phone}:\n{message_body}\n")
-        return {"message": "Twilio not configured. Mock notification logged to console."}
-
-    try:
-        tw_client = Client(account_sid, auth_token)
-        tw_client.messages.create(
-            body=message_body,
-            from_=f"whatsapp:{twilio_number}",
-            to=f"whatsapp:{phone}"
-        )
-        return {"message": "WhatsApp notification dispatched successfully."}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Twilio Gateway Error: {str(e)}")
+    # Mock notification since Twilio is not being used
+    print(f"\n[MOCK WHATSAPP] To {phone}:\n{message_body}\n")
+    return {"message": "Mock WhatsApp notification logged to console."}
 
 # ── EXPORT COMPLIANCE REPORT ──────────────────────────────────
 
