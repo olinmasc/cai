@@ -1,9 +1,9 @@
 from fastapi.responses import FileResponse
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from backend.database import reconciliations_collection, clients_collection, audit_logs_collection
-from backend.models import NotifyClientRequest
-from backend.dependencies import get_current_user, require_admin
+from database import reconciliations_collection, clients_collection, audit_logs_collection
+from models import NotifyClientRequest
+from dependencies import get_current_user, require_admin
 from bson import ObjectId
 from datetime import datetime
 import os

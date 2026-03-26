@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
-from backend.database import filings_collection, clients_collection
-from backend.models import FilingCreate
-from backend.dependencies import get_current_user
+from database import filings_collection, clients_collection
+from models import FilingCreate
+from dependencies import get_current_user
 from bson import ObjectId
 from datetime import datetime
 

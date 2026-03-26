@@ -1,7 +1,7 @@
-from backend.routers import auth, clients, invoices, reconciliation, filings
+from routers import auth, clients, invoices, reconciliation, filings
 from fastapi import FastAPI, UploadFile, File, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-from backend.ai_routes import ai_router
+from ai_routes import ai_router
 import pandas as pd
 import io
 import math
@@ -9,7 +9,7 @@ import re
 import os
 from datetime import datetime
 from bson import ObjectId
-from backend.database import invoices_collection, clients_collection
+from database import invoices_collection, clients_collection
 import backend.audit as audit
 
 app = FastAPI(title="CAI — Autonomous GST Compliance", version="1.0.0")
