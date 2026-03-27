@@ -1,7 +1,0 @@
-artifact_location: file:///Users/olinmascarenhas/Desktop/cai/backend/mlruns/116368133690223751
-creation_time: 1773414241833
-experiment_id: '116368133690223751'
-last_update_time: 1773414241833
-lifecycle_stage: active
-name: cai-gst-anomaly-detection
-workspace: default

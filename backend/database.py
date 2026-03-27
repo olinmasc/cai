@@ -1,19 +1,22 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 import os
+import certifi  # <-- Added to handle macOS SSL certificates
 
 load_dotenv()
 
 # --- CONFIGURATION ---
-# 1. Replace YOUR_ACTUAL_PASSWORD with the one you copied from MongoDB Atlas.
-# 2. The os.getenv looks for a variable named MONGODB_URL on Vercel first.
 DEFAULT_CLOUD_URI = "mongodb+srv://olinmascarenhas_db_user:nhHZA4V1NBfjcjEk@cai-database.2r1xe3d.mongodb.net/?retryWrites=true&w=majority&appName=CAI-Database"
 
 MONGODB_URL = os.getenv("MONGODB_URL", DEFAULT_CLOUD_URI)
 DATABASE_NAME = os.getenv("DATABASE_NAME", "cai_gst_db")
 
-# Create the client
-client = AsyncIOMotorClient(MONGODB_URL)
+# Create the client with the SSL certificate fix
+# tlsCAFile=certifi.where() tells Python to use the certifi bundle instead of the missing macOS ones
+client = AsyncIOMotorClient(
+    MONGODB_URL,
+    tlsCAFile=certifi.where()
+)
 db = client[DATABASE_NAME]
 
 # --- COLLECTIONS ---

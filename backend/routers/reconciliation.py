@@ -19,17 +19,19 @@ def serialize(doc) -> dict:
     del doc["_id"]
     return doc
 
-# ── FETCH EXCEPTIONS ──────────────────────────────────────────
 
+# ── FETCH EXCEPTIONS ──────────────────────────────────────────
 
 @router.get("/{client_id}")
 async def get_reconciliation(client_id: str, current_user=Depends(get_current_user)):
     """Fetches all logged anomalies and mismatches for a given client."""
-    records = await reconciliations_collection.find({"client_id": client_id}).sort("reconciled_at", -1).to_list(length=1000)
+    records = await reconciliations_collection.find(
+        {"client_id": client_id}
+    ).sort("reconciled_at", -1).to_list(length=1000)
     return [serialize(r) for r in records]
 
-# ── APPROVE EXCEPTION (OVERRIDE AI) ───────────────────────────
 
+# ── APPROVE EXCEPTION (OVERRIDE AI) ───────────────────────────
 
 @router.post("/approve/{exception_id}")
 async def approve_exception(exception_id: str, current_admin=Depends(require_admin)):
@@ -37,25 +39,24 @@ async def approve_exception(exception_id: str, current_admin=Depends(require_adm
     result = await reconciliations_collection.update_one(
         {"_id": ObjectId(exception_id)},
         {"$set": {
-            "status": "approved",
+            "status":      "approved",
             "approved_by": current_admin["email"],
             "approved_at": datetime.utcnow().isoformat()
         }}
     )
     if result.modified_count == 0:
-        raise HTTPException(
-            status_code=404, detail="Exception record not found")
+        raise HTTPException(404, detail="Exception record not found")
 
     await audit_logs_collection.insert_one({
-        "action": "OVERRIDE_AI_EXCEPTION",
-        "user": current_admin["email"],
+        "action":       "OVERRIDE_AI_EXCEPTION",
+        "user":         current_admin["email"],
         "exception_id": exception_id,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp":    datetime.utcnow().isoformat()
     })
     return {"message": "Exception overridden and logged to audit trail."}
 
-# ── CLIENT NOTIFICATION (WHATSAPP) ────────────────────────────
 
+# ── CLIENT NOTIFICATION (WHATSAPP) ────────────────────────────
 
 @router.post("/notify-client")
 async def notify_client(req: NotifyClientRequest, current_admin=Depends(require_admin)):
@@ -63,48 +64,52 @@ async def notify_client(req: NotifyClientRequest, current_admin=Depends(require_
     client = await clients_collection.find_one({"_id": ObjectId(req.client_id)})
     if not client or not client.get("phone"):
         raise HTTPException(
-            status_code=400, detail="Client phone number is missing or invalid.")
+            400, detail="Client phone number is missing or invalid.")
 
     phone = client["phone"]
     formatted_amount = f"₹{req.amount:,.2f}" if req.amount else "Unknown Amount"
+    firm_name = current_admin.get("firm_name", "your CA Firm")
 
     message_body = (
-        f"Hello from {current_admin.get('firm_name', 'your CA Firm')}.\n\n"
+        f"Hello from {firm_name}.\n\n"
         f"Our automated compliance system has detected a mismatch requiring your attention:\n"
         f"Invoice Ref: {req.invoice_no}\n"
         f"Amount: {formatted_amount}\n\n"
         f"Please upload the corrected invoice to our secure portal to avoid filing delays."
     )
 
-    # Mock notification since Twilio is not being used
     print(f"\n[MOCK WHATSAPP] To {phone}:\n{message_body}\n")
     return {"message": "Mock WhatsApp notification logged to console."}
 
+
 # ── EXPORT COMPLIANCE REPORT ──────────────────────────────────
 
-
 @router.get("/export-report/{client_id}")
-async def export_report(client_id: str, format: str = "excel", current_admin=Depends(require_admin)):
+async def export_report(
+    client_id: str,
+    format: str = "excel",
+    current_admin=Depends(require_admin)
+):
     """Generates an Excel or PDF report of all unresolved anomalies for a client."""
     records = await reconciliations_collection.find({
         "client_id": client_id,
-        "status": "mismatch"
+        "status":    "mismatch"
     }).to_list(length=1000)
 
     if not records:
         raise HTTPException(
-            status_code=404, detail="No active anomalies found for this client.")
+            404, detail="No active anomalies found for this client.")
 
     if format == "excel":
         df = pd.DataFrame(records)
-        df = df[['party_name', 'invoice_id',
-                 'amount', 'mismatch_reason', 'period']]
-        df.columns = ['Supplier/Buyer', 'Invoice Number',
-                      'Amount (INR)', 'AI Analysis', 'Filing Period']
+        df = df[["party_name", "invoice_id",
+                 "amount", "mismatch_reason", "period"]]
+        df.columns = ["Supplier/Buyer", "Invoice Number",
+                      "Amount (INR)", "AI Analysis", "Filing Period"]
 
         output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name='Anomalies')
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Anomalies")
         output.seek(0)
 
         return StreamingResponse(
@@ -147,21 +152,17 @@ async def export_report(client_id: str, format: str = "excel", current_admin=Dep
             headers={
                 "Content-Disposition": f"attachment; filename=GST_Mismatch_Report_{client_id[-6:]}.pdf"}
         )
+
     else:
         raise HTTPException(
-            status_code=400, detail="Invalid format requested. Valid options: 'excel', 'pdf'")
+            400, detail="Invalid format. Valid options: 'excel', 'pdf'")
 
+
+# ── DOWNLOAD AUDIT FILE ───────────────────────────────────────
 
 @router.get("/audit/{filename}")
 async def download_audit(filename: str):
-    # ── FIX: Use /tmp on Vercel (read-only filesystem) ──
     path = f"/tmp/audit_reports/{filename}"
-
     if not os.path.exists(path):
         raise HTTPException(404, "Audit file not found")
-
-    return FileResponse(
-        path,
-        media_type="application/pdf",
-        filename=filename
-    )
+    return FileResponse(path, media_type="application/pdf", filename=filename)

@@ -10,16 +10,20 @@ import os
 from datetime import datetime
 from bson import ObjectId
 from database import invoices_collection, clients_collection
-import audit  # ← FIXED: was "import backend.audit as audit" which breaks on Render
+import audit
 
 app = FastAPI(title="CAI — Autonomous GST Compliance", version="1.0.0")
 
-# ── CORS: supports localhost dev + any Vercel deployment ──
+# ── CORS FIXED: Allows your frontend (5173) to talk to this backend (8001) ──
 _frontend_url = os.getenv("FRONTEND_URL", "")
 
 allowed_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:8001",
+    "http://127.0.0.1:8001",
 ]
 
 if _frontend_url:
@@ -27,7 +31,8 @@ if _frontend_url:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    # This ["*"] is the "Master Key" that stops the CORS errors locally
+    allow_origins=["*"] if not _frontend_url else allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -87,16 +92,13 @@ async def upload_real_invoices(client_id: str, file: UploadFile = File(...)):
 
     for index, row in df.iterrows():
         row_num = index + 2
-
         invoice_no = str(row.get('Invoice No', '')).strip()
         if not invoice_no or invoice_no.lower() == 'nan':
             row_errors.append(f"Row {row_num}: Invoice Number is missing.")
             continue
-
         amount = row.get('Amount', 0)
         if math.isnan(amount):
-            row_errors.append(
-                f"Row {row_num}: Amount is not a valid number.")
+            row_errors.append(f"Row {row_num}: Amount is not a valid number.")
             continue
 
         valid_invoices.append({
